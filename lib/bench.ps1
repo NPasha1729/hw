@@ -57,6 +57,11 @@ function Asset([string]$rel, [switch]$Quiet) {
   $src = Join-Path $script:ASSETDIR $rel
   if (-not (Test-Path $src)) {
     $packKey = @($script:PACKS.Keys | Where-Object { $rel.StartsWith($_) })[0]
+    if ($script:USBROOT) {
+      # Running from the stick: never download. A missing file means the stick is incomplete.
+      if (-not $Quiet) { Say "    $rel is missing from the USB stick (no download from the stick). Re-copy assets\ onto it." 'Yellow' }
+      return $null
+    }
     if ($packKey -and (Test-Path (Join-Path $ROOT 'packs.json'))) { [void](Fetch-Pack $script:PACKS[$packKey] -Quiet:$Quiet) }
     if (-not (Test-Path $src)) { return $null }
   }

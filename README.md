@@ -56,6 +56,7 @@ The kit already falls back on its own. This is what it does, and what you do whe
 | Admin prompt refused | Carries on without admin; disk wear = INCOMPLETE | logic only |
 | One-liner: no internet / GitHub blocked | Says "use the USB stick" | yes (S12) |
 | One-liner: a benchmark download fails | Skips that test, report still made | yes (S11) |
+| A benchmark file is missing from the stick | Never downloads when run from the stick: skips that test and says "re-copy assets\" | yes |
 | A download or a file on the stick was altered | Refuses to run it (SHA256 check) | yes (S10, S17) |
 | Window closed / killed mid-test | Next run kills leftover processes, puts sleep settings back, says which test it stopped in | yes (S13) |
 | Machine reboots or dies during a load test | Next run reports it: RED, or AMBER if it was on battery | yes (S15, S16) |
