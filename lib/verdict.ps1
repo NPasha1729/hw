@@ -149,7 +149,8 @@ function Get-Verdict($R, $C, $B, $M, [string]$UseProfile) {
     $rr = [double]$B.render.ratio
     $PROF.Render = @{ level = $(if ($rr -ge 0.9) { 'GREEN' } elseif ($rr -ge 0.6) { 'AMBER' } else { 'RED' }); why = "renders at $([math]::Round($rr,2))x the reference machine" }
   } elseif ($null -ne $threads) {
-    $PROF.Render = @{ level = $(if ($threads -ge 16) { 'GREEN' } elseif ($threads -ge 8) { 'AMBER' } else { 'RED' }); why = "$threads CPU threads (from specs; render test not run)" }
+    $rnote = if ($B.render -and $B.render.fps) { "render test $($B.render.fps) fps, no reference to compare yet" } else { 'render test not run' }
+    $PROF.Render = @{ level = $(if ($threads -ge 16) { 'GREEN' } elseif ($threads -ge 8) { 'AMBER' } else { 'RED' }); why = "$threads CPU threads (from specs; $rnote)" }
   } else { $PROF.Render = @{ level = 'INCOMPLETE'; why = 'CPU not readable' } }
   $llmWhy = "GPU memory $vmax GB, RAM $ramT GB ($($R.ram.channel))"
   $PROF.LLM = @{ level = $(if ($vmax -ge 8 -or ($ramT -ge 32 -and $R.ram.channel -ne 'single')) { 'GREEN' } elseif ($vmax -ge 6 -or $ramT -ge 16) { 'AMBER' } else { 'RED' }); why = $llmWhy }
