@@ -1,0 +1,58 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>hw GPU stress</title>
+<style>html,body{margin:0;height:100%;background:#000;color:#fff;font:20px system-ui,sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100vw;height:100vh}#hud{position:fixed;left:16px;top:16px;background:rgba(0,0,0,.7);padding:12px 16px;border-radius:8px;white-space:pre}</style>
+</head><body><canvas id="c"></canvas><div id="hud">starting...</div>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  var SECS = parseInt(q.get('secs') || '420', 10);
+  var base = location.pathname.replace(/stress\.html$/, '');
+  var hud = document.getElementById('hud');
+  var cv = document.getElementById('c');
+  cv.width = Math.min(1920, screen.width * (window.devicePixelRatio || 1));
+  cv.height = Math.min(1080, screen.height * (window.devicePixelRatio || 1));
+  var gl = cv.getContext('webgl2', { antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
+  function post(o) { try { var x = new XMLHttpRequest(); x.open('POST', base + 's', true); x.setRequestHeader('Content-Type', 'text/plain'); x.send(JSON.stringify(o)); } catch (e) {} }
+  if (!gl) { hud.textContent = 'WebGL2 not available'; post({ done: true, error: 'no webgl2', renderer: 'none' }); return; }
+  var renderer = 'unknown';
+  var ext = gl.getExtension('WEBGL_debug_renderer_info');
+  if (ext) { renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL); } else { renderer = gl.getParameter(gl.RENDERER); }
+  var vs = '#version 300 es\nin vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  var fs = '#version 300 es\nprecision highp float;uniform int N;uniform float T;out vec4 o;void main(){vec2 u=gl_FragCoord.xy*0.001;float a=T;vec2 z=u;for(int i=0;i<N;i++){z=vec2(z.x*z.x-z.y*z.y,2.*z.x*z.y)*0.5+u+vec2(sin(a),cos(a))*0.1;a+=0.001;}o=vec4(fract(z),fract(a),1.);}';
+  function sh(t, s) { var x = gl.createShader(t); gl.shaderSource(x, s); gl.compileShader(x); return x; }
+  var pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+  var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  var loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  var uN = gl.getUniformLocation(pr, 'N'), uT = gl.getUniformLocation(pr, 'T');
+  var px = new Uint8Array(4);
+  var N = 64, t0 = performance.now(), last = t0, frames = 0, workAcc = 0, lastPost = t0;
+  var pixels = cv.width * cv.height;
+  function frame() {
+    var now = performance.now();
+    var dt = now - last; last = now;
+    gl.uniform1i(uN, N); gl.uniform1f(uT, now * 0.001);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); // force the GPU to finish the frame
+    frames++; workAcc += N * pixels;
+    if (dt > 0 && dt < 1000) { if (dt < 40) { N = Math.min(20000, Math.ceil(N * 1.05)); } else if (dt > 60) { N = Math.max(8, Math.floor(N * 0.95)); } }
+    var el = (now - t0) / 1000;
+    if (now - lastPost >= 5000) {
+      var secs = (now - lastPost) / 1000;
+      var work = Math.round(workAcc / secs / 1e8) / 10; // giga-iterations per second
+      var fps = Math.round(frames / secs);
+      post({ t: Math.round(el), fps: fps, work: work, iter: N, renderer: renderer });
+      hud.textContent = 'GPU stress test - do not close\n' + renderer + '\n' + Math.round(el) + ' / ' + SECS + ' s   work ' + work + '   fps ' + fps;
+      frames = 0; workAcc = 0; lastPost = now;
+    }
+    if (el >= SECS) { post({ done: true, renderer: renderer, t: Math.round(el) }); hud.textContent = 'GPU test finished. You can close this window.'; return; }
+    requestAnimationFrame(frame);
+  }
+  hud.textContent = 'GPU stress test - do not close\n' + renderer;
+  post({ t: 0, fps: 0, work: 0, iter: N, renderer: renderer });
+  window.onerror = function (m) { post({ t: Math.round((performance.now() - t0) / 1000), err: String(m), iter: N, renderer: renderer }); };
+  setInterval(function () { post({ t: Math.round((performance.now() - t0) / 1000), beat: 1, frames: frames, iter: N, vis: document.visibilityState, lost: gl.isContextLost(), renderer: renderer }); }, 3000);
+  requestAnimationFrame(frame);
+})();
+</script></body></html>

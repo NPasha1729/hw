@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>hw manual checks</title>
+<style>html,body{margin:0;height:100%;font:22px system-ui,sans-serif;background:#111;color:#eee}
+#info{position:fixed;left:16px;bottom:16px;background:rgba(0,0,0,.75);color:#fff;padding:10px 14px;border-radius:8px}
+#keys{display:none;padding:24px}.k{display:inline-block;min-width:40px;margin:3px;padding:6px 8px;border:1px solid #666;border-radius:5px;text-align:center}.k.on{background:#2a7;color:#000}</style>
+</head><body>
+<div id="keys"><h2>Keyboard test: press every key. Keys turn green.</h2><div id="kb"></div><p id="last"></p></div>
+<div id="info"></div>
+<script>
+var mode = new URLSearchParams(location.search).get('mode') || 'pixels';
+var info = document.getElementById('info');
+if (mode === 'pixels') {
+  var cols = ['#000', '#fff', '#f00', '#0f0', '#00f', '#808080'], i = 0;
+  function show() { document.body.style.background = cols[i]; info.textContent = 'Dead pixel test ' + (i + 1) + '/' + cols.length + ': look for dots that stay a different colour. Click or press Space for next, Esc to finish.'; }
+  document.addEventListener('click', function () { i = (i + 1) % cols.length; show(); });
+  document.addEventListener('keydown', function (e) { if (e.code === 'Space') { i = (i + 1) % cols.length; show(); } });
+  show();
+} else if (mode === 'keys') {
+  document.getElementById('keys').style.display = 'block';
+  var rows = ['Escape F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12', 'Backquote Digit1 Digit2 Digit3 Digit4 Digit5 Digit6 Digit7 Digit8 Digit9 Digit0 Minus Equal Backspace',
+    'Tab KeyQ KeyW KeyE KeyR KeyT KeyY KeyU KeyI KeyO KeyP BracketLeft BracketRight Backslash', 'CapsLock KeyA KeyS KeyD KeyF KeyG KeyH KeyJ KeyK KeyL Semicolon Quote Enter',
+    'ShiftLeft KeyZ KeyX KeyC KeyV KeyB KeyN KeyM Comma Period Slash ShiftRight', 'ControlLeft AltLeft Space AltRight ControlRight ArrowLeft ArrowUp ArrowDown ArrowRight'];
+  var kb = document.getElementById('kb'), seen = 0, total = 0;
+  rows.forEach(function (r) { var d = document.createElement('div'); r.split(' ').forEach(function (c) { var s = document.createElement('span'); s.className = 'k'; s.id = c; s.textContent = c.replace(/^(Key|Digit)/, ''); d.appendChild(s); total++; }); kb.appendChild(d); });
+  document.addEventListener('keydown', function (e) { e.preventDefault(); var el = document.getElementById(e.code); if (el && !el.classList.contains('on')) { el.classList.add('on'); seen++; } document.getElementById('last').textContent = 'last: ' + e.code + '   (' + seen + ' of ' + total + ' keys)'; });
+  info.textContent = 'Some keys (F-keys, Fn) may need the Fn key. Close this window when done.';
+} else if (mode === 'sound') {
+  info.textContent = 'Click LEFT half for left speaker, RIGHT half for right speaker.';
+  document.body.innerHTML += '<div style="display:flex;height:100%"><div id="L" style="flex:1;display:flex;align-items:center;justify-content:center;border-right:2px solid #444">LEFT</div><div id="R" style="flex:1;display:flex;align-items:center;justify-content:center">RIGHT</div></div>';
+  function beep(pan) { var a = new (window.AudioContext || window.webkitAudioContext)(); var o = a.createOscillator(), p = a.createStereoPanner(), g = a.createGain(); o.frequency.value = 440; g.gain.value = 0.3; o.connect(g); g.connect(p); p.connect(a.destination); p.pan.value = pan; o.start(); o.stop(a.currentTime + 1); }
+  document.getElementById('L').onclick = function () { beep(-1); }; document.getElementById('R').onclick = function () { beep(1); };
+}
+</script></body></html>

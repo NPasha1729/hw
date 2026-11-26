@@ -1,0 +1,27 @@
+{
+  "win-smartctl": {
+    "file": "win-smartctl.zip",
+    "size": 483451,
+    "sha256": "ed1e097d376635d311f7bcf3aab84c1982ae9fc9e82c580a6c004faefbdc61f3"
+  },
+  "win-ffmpeg": {
+    "file": "win-ffmpeg.zip",
+    "size": 88407596,
+    "sha256": "76048d2570d6b4775a7e8c2dcb542041949a11ebd1816f410389fe65c1d25ea2"
+  },
+  "win-llama-vulkan": {
+    "file": "win-llama-vulkan.zip",
+    "size": 39930088,
+    "sha256": "ce9228a7a6b04b4da8ad0abd04750fd90c43dfa96ca766dad9620be98dcc4293"
+  },
+  "win-llama-cpu": {
+    "file": "win-llama-cpu.zip",
+    "size": 26028518,
+    "sha256": "3695602693c90b764ef0965920fc027603ac2d0ce2f8d469945c3ecae9a12141"
+  },
+  "model": {
+    "file": "model.zip",
+    "size": 477537487,
+    "sha256": "9141c1b23fe8f72b2e2abcaacc16f0f0dc2bebf85c5db4539c690989ee3477d9"
+  }
+}

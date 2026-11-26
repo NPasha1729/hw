@@ -1,0 +1,6 @@
+assets/
+reports/
+hw-report-*
+*.zip
+__pycache__/
+dist/
